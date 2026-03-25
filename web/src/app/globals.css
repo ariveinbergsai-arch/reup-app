@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --muted: #f7f7f7;
+  --muted-foreground: #6b6b6b;
+  --border: #e5e5e5;
+  --card: #ffffff;
+  --nav-bg: #000000;
+  --nav-fg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ffffff;
+    --primary: #ffffff;
+    --primary-foreground: #000000;
+    --muted: #141414;
+    --muted-foreground: #888888;
+    --border: #262626;
+    --card: #141414;
+    --nav-bg: #000000;
+    --nav-fg: #ffffff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grailed-style buttons */
+.btn-primary {
+  @apply bg-[var(--primary)] text-[var(--primary-foreground)] px-6 py-3 font-medium text-sm uppercase tracking-wider;
+  @apply hover:opacity-80 transition-opacity;
+}
+
+.btn-secondary {
+  @apply border border-[var(--foreground)] text-[var(--foreground)] px-6 py-3 font-medium text-sm uppercase tracking-wider;
+  @apply hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all;
+}
+
+.btn-ghost {
+  @apply text-[var(--foreground)] px-4 py-2 text-sm;
+  @apply hover:opacity-60 transition-opacity;
+}
+
+/* Cards - minimal */
+.card {
+  @apply bg-[var(--card)] border border-[var(--border)];
+}
+
+.card:hover {
+  @apply border-[var(--foreground)];
+}
+
+/* Inputs - minimal */
+.input {
+  @apply w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)];
+  @apply focus:outline-none focus:border-[var(--foreground)] transition-colors;
+  @apply placeholder:text-[var(--muted-foreground)];
+}
+
+/* Tags */
+.tag {
+  @apply text-xs uppercase tracking-wider text-[var(--muted-foreground)];
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Links */
+a {
+  @apply transition-opacity hover:opacity-60;
+}
+
+/* Selection */
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
