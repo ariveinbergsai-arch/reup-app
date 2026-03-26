@@ -34,6 +34,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Helper to fetch or create profile
+    const fetchOrCreateProfile = async (user: User): Promise<Profile | null> => {
+      // Try to fetch existing profile
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData) {
+        return profileData
+      }
+
+      // If no profile exists, create one
+      if (error?.code === 'PGRST116') { // No rows returned
+        const username = user.user_metadata?.username || 
+                        user.email?.split('@')[0] || 
+                        `user_${user.id.slice(0, 8)}`
+        
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            username: username,
+            avatar_url: null,
+            bio: null,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('Failed to create profile:', createError)
+          return null
+        }
+        return newProfile
+      }
+
+      console.error('Profile fetch error:', error)
+      return null
+    }
+
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -41,12 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        setProfile(profileData)
+        const profile = await fetchOrCreateProfile(session.user)
+        setProfile(profile)
       }
       
       setLoading(false)
@@ -61,12 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-          setProfile(profileData)
+          const profile = await fetchOrCreateProfile(session.user)
+          setProfile(profile)
         } else {
           setProfile(null)
         }

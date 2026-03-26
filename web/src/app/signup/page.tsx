@@ -85,6 +85,21 @@ export default function SignupPage() {
           return
         }
 
+        // Create profile for the new user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            username: username,
+            avatar_url: null,
+            bio: null,
+          }, { onConflict: 'id' })
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError)
+          // Don't block signup, profile can be created later
+        }
+
         setSuccess(true)
         // Redirect to home or show confirmation message
         setTimeout(() => {
