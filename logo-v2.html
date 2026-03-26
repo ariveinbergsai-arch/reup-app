@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap');
+    body { margin: 0; padding: 40px; display: flex; gap: 40px; flex-wrap: wrap; background: #0a0a0a; }
+    
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .label {
+      color: #666;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+    }
+    
+    /* Version 1: Clean black circle */
+    .logo-1 {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .logo-1 .text {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 80px;
+      color: #fff;
+      letter-spacing: -3px;
+    }
+    
+    /* Version 2: White on black square */
+    .logo-2 {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .logo-2 .text {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 100px;
+      color: #fff;
+      letter-spacing: -4px;
+    }
+    
+    /* Version 3: Minimal with accent */
+    .logo-3 {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .logo-3 .text {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 72px;
+      color: #fff;
+      letter-spacing: -2px;
+    }
+    .logo-3 .text span {
+      color: #3b82f6;
+    }
+    
+    /* Version 4: Inverted */
+    .logo-4 {
+      width: 400px;
+      height: 400px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .logo-4 .text {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 80px;
+      color: #000;
+      letter-spacing: -3px;
+    }
+    
+    /* Version 5: Just the R */
+    .logo-5 {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .logo-5 .text {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 200px;
+      color: #fff;
+    }
+    
+    /* Version 6: Stacked */
+    .logo-6 {
+      width: 400px;
+      height: 400px;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+    }
+    .logo-6 .text-top {
+      font-family: 'Inter', 'Arial Black', sans-serif;
+      font-weight: 900;
+      font-size: 120px;
+      color: #fff;
+      letter-spacing: -4px;
+      line-height: 0.85;
+    }
+    .logo-6 .text-bottom {
+      font-family: Arial, sans-serif;
+      font-size: 18px;
+      color: #666;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <div class="logo-1"><span class="text">REUP</span></div>
+    <span class="label">v1: Circle</span>
+  </div>
+  
+  <div class="logo-container">
+    <div class="logo-2"><span class="text">REUP</span></div>
+    <span class="label">v2: Square</span>
+  </div>
+  
+  <div class="logo-container">
+    <div class="logo-3"><span class="text">RE<span>UP</span></span></div>
+    <span class="label">v3: Accent</span>
+  </div>
+  
+  <div class="logo-container">
+    <div class="logo-4"><span class="text">REUP</span></div>
+    <span class="label">v4: Inverted</span>
+  </div>
+  
+  <div class="logo-container">
+    <div class="logo-5"><span class="text">R</span></div>
+    <span class="label">v5: Icon</span>
+  </div>
+  
+  <div class="logo-container">
+    <div class="logo-6">
+      <span class="text-top">REUP</span>
+      <span class="text-bottom">Fashion</span>
+    </div>
+    <span class="label">v6: Stacked</span>
+  </div>
+</body>
+</html>
