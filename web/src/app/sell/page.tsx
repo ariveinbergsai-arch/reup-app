@@ -1,20 +1,151 @@
 'use client'
 
-import { useState } from 'react'
-import { Camera, X, Upload, Info, DollarSign } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Camera, X, Upload, DollarSign, Loader2 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
+import { supabase } from '@/lib/supabase'
 
 const CATEGORIES = ['Tops', 'Bottoms', 'Outerwear', 'Footwear', 'Accessories', 'Other']
 const CONDITIONS = ['New with tags', 'Like new', 'Good', 'Fair']
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
 export default function SellPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+  
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
+  const [condition, setCondition] = useState('')
+  const [selectedSize, setSelectedSize] = useState('')
+  const [customSize, setCustomSize] = useState('')
+  const [price, setPrice] = useState('')
   const [images, setImages] = useState<string[]>([])
-  const [tagImage, setTagImage] = useState<string>('')
-  const [selectedSize, setSelectedSize] = useState<string>('')
-  const [price, setPrice] = useState<string>('')
+  const [tagImage, setTagImage] = useState('')
+  
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/sell')
+    }
+  }, [user, authLoading, router])
 
   const fee = price ? (parseFloat(price) * 0.1).toFixed(2) : '0.00'
   const earnings = price ? (parseFloat(price) * 0.9).toFixed(2) : '0.00'
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!user) {
+      setError('You must be logged in to create a listing')
+      return
+    }
+
+    // Validation
+    if (!title.trim()) {
+      setError('Title is required')
+      return
+    }
+    if (!category) {
+      setError('Please select a category')
+      return
+    }
+    if (!condition) {
+      setError('Please select a condition')
+      return
+    }
+    if (!selectedSize) {
+      setError('Please select a size')
+      return
+    }
+    if (!price || parseFloat(price) <= 0) {
+      setError('Please enter a valid price')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const finalSize = selectedSize === 'custom' ? customSize : selectedSize
+      
+      // For now, use placeholder images if none uploaded
+      const finalImages = images.length > 0 ? images : ['https://via.placeholder.com/400x400?text=No+Image']
+      const finalTagImage = tagImage || 'https://via.placeholder.com/400x400?text=No+Tag'
+
+      const { data, error: insertError } = await supabase
+        .from('listings')
+        .insert({
+          user_id: user.id,
+          title: title.trim(),
+          description: description.trim() || null,
+          price: parseFloat(price),
+          category: category.toLowerCase(),
+          size: finalSize,
+          condition: condition.toLowerCase().replace(/ /g, '-'),
+          images: finalImages,
+          tag_image: finalTagImage,
+          status: 'active',
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Insert error:', insertError)
+        setError(insertError.message)
+        return
+      }
+
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+    } catch (err) {
+      console.error('Submit error:', err)
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+      </div>
+    )
+  }
+
+  // Don't render form if not logged in (will redirect)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center">
+        <p>Redirecting to login...</p>
+      </div>
+    )
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-[var(--muted)] flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold">Listed Successfully!</h1>
+          <p className="text-[var(--muted-foreground)] mt-2">Your item is now live. Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--muted)]">
@@ -26,7 +157,13 @@ export default function SellPage() {
         </div>
 
         <div className="card p-6 sm:p-8">
-          <form className="space-y-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Photos Section */}
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold mb-3">
@@ -72,10 +209,10 @@ export default function SellPage() {
               <label className="flex items-center gap-2 text-sm font-semibold mb-3">
                 <Upload className="w-4 h-4" />
                 Tag Photo
-                <span className="tag-accent text-xs ml-1">Required</span>
+                <span className="text-[var(--muted-foreground)] font-normal">(optional for now)</span>
               </label>
               <div
-                className="h-32 rounded-xl border-2 border-dashed border-[var(--primary)] flex flex-col items-center justify-center cursor-pointer bg-[var(--muted)] hover:bg-[var(--border)] transition-colors"
+                className="h-32 rounded-xl border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center cursor-pointer bg-[var(--muted)] hover:bg-[var(--border)] hover:border-[var(--primary)] transition-colors"
               >
                 {tagImage ? (
                   <div className="relative w-full h-full">
@@ -90,8 +227,8 @@ export default function SellPage() {
                   </div>
                 ) : (
                   <>
-                    <Upload className="w-6 h-6 text-[var(--primary)] mb-2" />
-                    <span className="text-sm font-medium text-[var(--primary)]">Upload tag photo</span>
+                    <Upload className="w-6 h-6 text-[var(--muted-foreground)] mb-2" />
+                    <span className="text-sm font-medium text-[var(--muted-foreground)]">Upload tag photo</span>
                     <span className="text-xs text-[var(--muted-foreground)] mt-1">For verification</span>
                   </>
                 )}
@@ -100,12 +237,15 @@ export default function SellPage() {
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-semibold mb-3">Title</label>
+              <label className="block text-sm font-semibold mb-3">Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 placeholder="e.g. Vintage Nike ACG Windbreaker"
                 className="input"
                 maxLength={80}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
               />
             </div>
 
@@ -116,26 +256,38 @@ export default function SellPage() {
                 placeholder="Describe your item — brand, condition, measurements, flaws..."
                 className="input min-h-[120px] resize-none"
                 maxLength={1000}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
 
             {/* Category & Condition Row */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold mb-3">Category</label>
-                <select className="input">
+                <label className="block text-sm font-semibold mb-3">Category <span className="text-red-500">*</span></label>
+                <select 
+                  className="input"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                >
                   <option value="">Select category</option>
                   {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-3">Condition</label>
-                <select className="input">
+                <label className="block text-sm font-semibold mb-3">Condition <span className="text-red-500">*</span></label>
+                <select 
+                  className="input"
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  required
+                >
                   <option value="">Select condition</option>
                   {CONDITIONS.map((cond) => (
-                    <option key={cond} value={cond.toLowerCase().replace(/ /g, '-')}>{cond}</option>
+                    <option key={cond} value={cond}>{cond}</option>
                   ))}
                 </select>
               </div>
@@ -143,7 +295,7 @@ export default function SellPage() {
 
             {/* Size */}
             <div>
-              <label className="block text-sm font-semibold mb-3">Size</label>
+              <label className="block text-sm font-semibold mb-3">Size <span className="text-red-500">*</span></label>
               <div className="flex flex-wrap gap-2">
                 {SIZES.map((size) => (
                   <button
@@ -171,11 +323,21 @@ export default function SellPage() {
                   Custom
                 </button>
               </div>
+              {selectedSize === 'custom' && (
+                <input
+                  type="text"
+                  placeholder="Enter custom size (e.g. 32x30, US 10)"
+                  className="input mt-3"
+                  value={customSize}
+                  onChange={(e) => setCustomSize(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             {/* Price */}
             <div>
-              <label className="block text-sm font-semibold mb-3">Price</label>
+              <label className="block text-sm font-semibold mb-3">Price <span className="text-red-500">*</span></label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
                 <input
@@ -183,13 +345,15 @@ export default function SellPage() {
                   placeholder="0.00"
                   className="input pl-10 text-lg font-semibold"
                   min={1}
+                  step="0.01"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
+                  required
                 />
               </div>
               
               {/* Price Breakdown */}
-              {price && (
+              {price && parseFloat(price) > 0 && (
                 <div className="mt-4 p-4 rounded-xl bg-[var(--muted)] space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-[var(--muted-foreground)]">Item price</span>
@@ -208,8 +372,19 @@ export default function SellPage() {
             </div>
 
             {/* Submit */}
-            <button type="submit" className="btn-primary w-full py-4 text-base">
-              List Item
+            <button 
+              type="submit" 
+              className="btn-primary w-full py-4 text-base flex items-center justify-center gap-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating Listing...
+                </>
+              ) : (
+                'List Item'
+              )}
             </button>
 
             <p className="text-xs text-center text-[var(--muted-foreground)]">
